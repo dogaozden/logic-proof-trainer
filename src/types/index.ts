@@ -50,11 +50,11 @@ export interface Theorem {
 export type InferenceRule =
   | 'modusPonens'          // MP: p ⊃ q, p ∴ q
   | 'modusTollens'         // MT: p ⊃ q, ~q ∴ ~p
-  | 'disjunctiveSyllogism' // DS: p ∨ q, ~p ∴ q
+  | 'disjunctiveSyllogism' // DS: p ∨ q, ~p ∴ q (or ~q ∴ p)
   | 'simplification'       // Simp: p · q ∴ p (or q)
   | 'conjunction'          // Conj: p, q ∴ p · q
   | 'hypotheticalSyllogism'// HS: p ⊃ q, q ⊃ r ∴ p ⊃ r
-  | 'addition'             // Add: p ∴ p ∨ q
+  | 'addition'             // Add: p ∴ p ∨ q or q ∨ p
   | 'constructiveDilemma'  // CD: p ∨ q, p ⊃ r, q ⊃ s ∴ r ∨ s
   | 'contradiction';       // NegE: p, ~p ∴ ⊥
 
@@ -315,11 +315,11 @@ function wrapIfNeeded(formula: Formula): string {
 export const inferenceRuleInfo: Record<InferenceRule, { name: string; abbrev: string; premises: number; symbol: string }> = {
   modusPonens: { name: 'Modus Ponens', abbrev: 'MP', premises: 2, symbol: 'p ⊃ q, p ∴ q' },
   modusTollens: { name: 'Modus Tollens', abbrev: 'MT', premises: 2, symbol: 'p ⊃ q, ~q ∴ ~p' },
-  disjunctiveSyllogism: { name: 'Disjunctive Syllogism', abbrev: 'DS', premises: 2, symbol: 'p ∨ q, ~p ∴ q' },
-  simplification: { name: 'Simplification', abbrev: 'Simp', premises: 1, symbol: 'p · q ∴ p' },
+  disjunctiveSyllogism: { name: 'Disjunctive Syllogism', abbrev: 'DS', premises: 2, symbol: 'p ∨ q, ~p ∴ q  (or ~q ∴ p)' },
+  simplification: { name: 'Simplification', abbrev: 'Simp', premises: 1, symbol: 'p · q ∴ p (or q)' },
   conjunction: { name: 'Conjunction', abbrev: 'Conj', premises: 2, symbol: 'p, q ∴ p · q' },
   hypotheticalSyllogism: { name: 'Hypothetical Syllogism', abbrev: 'HS', premises: 2, symbol: 'p ⊃ q, q ⊃ r ∴ p ⊃ r' },
-  addition: { name: 'Addition', abbrev: 'Add', premises: 1, symbol: 'p ∴ p ∨ q' },
+  addition: { name: 'Addition', abbrev: 'Add', premises: 1, symbol: 'p ∴ p ∨ q or q ∨ p' },
   constructiveDilemma: { name: 'Constructive Dilemma', abbrev: 'CD', premises: 3, symbol: 'p ∨ q, p ⊃ r, q ⊃ s ∴ r ∨ s' },
   contradiction: { name: 'Contradiction', abbrev: 'NegE', premises: 2, symbol: 'p, ~p ∴ ⊥' },
 };
