@@ -69,7 +69,7 @@ export type EquivalenceRule =
   | 'implication'          // Impl: (p ⊃ q) :: (~p ∨ q)
   | 'exportation'          // Exp: [(p · q) ⊃ r] :: [p ⊃ (q ⊃ r)]
   | 'tautology'            // Taut: p :: (p · p), p :: (p ∨ p)
-  | 'equivalence';         // Equiv: (p ≡ q) :: [(p ⊃ q) · (q ⊃ p)]
+  | 'equivalence';         // Equiv: (p ≡ q) :: [(p ⊃ q) · (q ⊃ p)], or (p · q) ∨ (~p · ~q)
 
 // Proof techniques
 export type ProofTechnique =
@@ -334,7 +334,7 @@ export const equivalenceRuleInfo: Record<EquivalenceRule, { name: string; abbrev
   implication: { name: 'Implication', abbrev: 'Impl', symbol: '(p ⊃ q) :: (~p ∨ q)' },
   exportation: { name: 'Exportation', abbrev: 'Exp', symbol: '[(p · q) ⊃ r] :: [p ⊃ (q ⊃ r)]' },
   tautology: { name: 'Tautology', abbrev: 'Taut', symbol: 'p :: (p · p)' },
-  equivalence: { name: 'Equivalence', abbrev: 'Equiv', symbol: '(p ≡ q) :: [(p ⊃ q) · (q ⊃ p)]' },
+  equivalence: { name: 'Equivalence', abbrev: 'Equiv', symbol: '(p ≡ q) :: [(p ⊃ q) · (q ⊃ p)], or (p · q) ∨ (~p · ~q)' },
 };
 
 export const proofTechniqueInfo: Record<ProofTechnique, { name: string; abbrev: string }> = {
