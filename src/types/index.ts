@@ -63,8 +63,8 @@ export type EquivalenceRule =
   | 'doubleNegation'       // DN: p :: ~~p
   | 'deMorgan'             // DeM: ~(p · q) :: (~p ∨ ~q), ~(p ∨ q) :: (~p · ~q)
   | 'commutation'          // Comm: (p ∨ q) :: (q ∨ p), (p · q) :: (q · p)
-  | 'association'          // Assoc: [p ∨ (q ∨ r)] :: [(p ∨ q) ∨ r]
-  | 'distribution'         // Dist: [p · (q ∨ r)] :: [(p · q) ∨ (p · r)]
+  | 'association'          // Assoc: [p ∨ (q ∨ r)] :: [(p ∨ q) ∨ r], [p · (q · r)] :: [(p · q) · r]
+  | 'distribution'         // Dist: [p · (q ∨ r)] :: [(p · q) ∨ (p · r)], [p ∨ (q · r)] :: [(p ∨ q) · (p ∨ r)]
   | 'contraposition'       // Contra: (p ⊃ q) :: (~q ⊃ ~p)
   | 'implication'          // Impl: (p ⊃ q) :: (~p ∨ q)
   | 'exportation'          // Exp: [(p · q) ⊃ r] :: [p ⊃ (q ⊃ r)]
@@ -326,14 +326,14 @@ export const inferenceRuleInfo: Record<InferenceRule, { name: string; abbrev: st
 
 export const equivalenceRuleInfo: Record<EquivalenceRule, { name: string; abbrev: string; symbol: string }> = {
   doubleNegation: { name: 'Double Negation', abbrev: 'DN', symbol: 'p :: ~~p' },
-  deMorgan: { name: "DeMorgan's Theorem", abbrev: 'DeM', symbol: '~(p · q) :: (~p ∨ ~q)' },
-  commutation: { name: 'Commutation', abbrev: 'Comm', symbol: '(p ∨ q) :: (q ∨ p)' },
-  association: { name: 'Association', abbrev: 'Assoc', symbol: '[p ∨ (q ∨ r)] :: [(p ∨ q) ∨ r]' },
-  distribution: { name: 'Distribution', abbrev: 'Dist', symbol: '[p · (q ∨ r)] :: [(p · q) ∨ (p · r)]' },
+  deMorgan: { name: "DeMorgan's Theorem", abbrev: 'DeM', symbol: '~(p · q) :: (~p ∨ ~q), ~(p ∨ q) :: (~p · ~q)' },
+  commutation: { name: 'Commutation', abbrev: 'Comm', symbol: '(p ∨ q) :: (q ∨ p), (p · q) :: (q · p)' },
+  association: { name: 'Association', abbrev: 'Assoc', symbol: '[p ∨ (q ∨ r)] :: [(p ∨ q) ∨ r], [p · (q · r)] :: [(p · q) · r]' },
+  distribution: { name: 'Distribution', abbrev: 'Dist', symbol: '[p · (q ∨ r)] :: [(p · q) ∨ (p · r)], [p ∨ (q · r)] :: [(p ∨ q) · (p ∨ r)]' },
   contraposition: { name: 'Contraposition', abbrev: 'Contra', symbol: '(p ⊃ q) :: (~q ⊃ ~p)' },
   implication: { name: 'Implication', abbrev: 'Impl', symbol: '(p ⊃ q) :: (~p ∨ q)' },
   exportation: { name: 'Exportation', abbrev: 'Exp', symbol: '[(p · q) ⊃ r] :: [p ⊃ (q ⊃ r)]' },
-  tautology: { name: 'Tautology', abbrev: 'Taut', symbol: 'p :: (p · p)' },
+  tautology: { name: 'Tautology', abbrev: 'Taut', symbol: 'p :: (p · p), p :: (p ∨ p)' },
   equivalence: { name: 'Equivalence', abbrev: 'Equiv', symbol: '(p ≡ q) :: [(p ⊃ q) · (q ⊃ p)], or (p · q) ∨ (~p · ~q)' },
 };
 
