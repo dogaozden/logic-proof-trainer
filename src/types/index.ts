@@ -97,7 +97,7 @@ export type EquivalenceRule =
   | 'tautology'            // Taut: p :: (p · p), p :: (p ∨ p)
   | 'equivalence'          // Equiv: (p ≡ q) :: [(p ⊃ q) · (q ⊃ p)], or (p · q) ∨ (~p · ~q)
   | 'quantifierNegation'   // QN: ~∀xφ :: ∃x~φ, ~∃xφ :: ∀x~φ
-  | 'definition';          // Def: unfold/fold ⊆, ∅, {a}, {a, b}, ∪, ∩, −, ℘, ⋃, ×, ⟨a, b⟩, Fun, Rev, Comp
+  | 'definition';          // Def: unfold/fold ⊆, ∅, {a}, {a, b}, ∪, ∩, −, ℘, ⋃, ×, ⟨a, b⟩, Fun, Rev, Comp, Ind
 
 // Proof techniques
 export type ProofTechnique =
@@ -490,7 +490,7 @@ export const equivalenceRuleInfo: Record<EquivalenceRule, { name: string; abbrev
   tautology: { name: 'Tautology', abbrev: 'Taut', symbol: 'p :: (p · p), p :: (p ∨ p)' },
   equivalence: { name: 'Equivalence', abbrev: 'Equiv', symbol: '(p ≡ q) :: [(p ⊃ q) · (q ⊃ p)], or (p · q) ∨ (~p · ~q)' },
   quantifierNegation: { name: 'Quantifier Negation', abbrev: 'QN', symbol: '~∀xφ :: ∃x~φ, ~∃xφ :: ∀x~φ' },
-  definition: { name: 'Definition', abbrev: 'Def', symbol: 'a ⊆ b :: ∀x(x ∈ a ⊃ x ∈ b), x ∈ a ∪ b :: x ∈ a ∨ x ∈ b, x ∈ a ∩ b :: x ∈ a . x ∈ b, x ∈ a − b :: x ∈ a . x ∉ b, x ∈ {a, b} :: x = a ∨ x = b, x ∈ {a} :: x = a, x ∈ ∅ :: ⊥, x ∈ ℘(a) :: x ⊆ a, x ∈ ⋃a :: ∃y(y ∈ a . x ∈ y), x ∈ a × b :: ∃y∃z(y ∈ a . z ∈ b . x = ⟨y, z⟩), ⟨a, b⟩ = {{a}, {a, b}}, Fun(f, a, b) :: f ⊆ a × b . ∀x(x ∈ a ⊃ ∃y(⟨x, y⟩ ∈ f . ∀z(⟨x, z⟩ ∈ f ⊃ z = y))), Rev(f, g) :: ∀x∀y(⟨x, y⟩ ∈ f ≡ ⟨y, x⟩ ∈ g), Comp(g, f, h) :: ∀x∀y(⟨x, y⟩ ∈ h ≡ ∃z(⟨x, z⟩ ∈ f . ⟨z, y⟩ ∈ g))' },
+  definition: { name: 'Definition', abbrev: 'Def', symbol: 'a ⊆ b :: ∀x(x ∈ a ⊃ x ∈ b), x ∈ a ∪ b :: x ∈ a ∨ x ∈ b, x ∈ a ∩ b :: x ∈ a . x ∈ b, x ∈ a − b :: x ∈ a . x ∉ b, x ∈ {a, b} :: x = a ∨ x = b, x ∈ {a} :: x = a, x ∈ ∅ :: ⊥, x ∈ ℘(a) :: x ⊆ a, x ∈ ⋃a :: ∃y(y ∈ a . x ∈ y), x ∈ a × b :: ∃y∃z(y ∈ a . z ∈ b . x = ⟨y, z⟩), ⟨a, b⟩ = {{a}, {a, b}}, Fun(f, a, b) :: f ⊆ a × b . ∀x(x ∈ a ⊃ ∃y(⟨x, y⟩ ∈ f . ∀z(⟨x, z⟩ ∈ f ⊃ z = y))), Rev(f, g) :: ∀x∀y(⟨x, y⟩ ∈ f ≡ ⟨y, x⟩ ∈ g), Comp(g, f, h) :: ∀x∀y(⟨x, y⟩ ∈ h ≡ ∃z(⟨x, z⟩ ∈ f . ⟨z, y⟩ ∈ g)), Ind(s) :: ∅ ∈ s . ∀x(x ∈ s ⊃ x ∪ {x} ∈ s)' },
 };
 
 export const proofTechniqueInfo: Record<ProofTechnique, { name: string; abbrev: string }> = {
