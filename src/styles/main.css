@@ -2392,5 +2392,7 @@ body {
 
   .header {
     padding-right: 52px;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 }
