@@ -189,6 +189,12 @@ pub fn get_hint(proof: &Proof) -> String {
         return "The proof is complete! The conclusion has been derived.".to_string();
     }
 
+    // Set-theory exercises carry a hand-written hint that names the rules they need. The
+    // propositional hints below read the proof's lines, which says nothing useful about ∀ and ∈.
+    if let Some(exercise) = get_set_theory_track().iter().flat_map(|c| c.exercises.iter()).find(|e| e.id == proof.theorem.id) {
+        return exercise.hint.clone();
+    }
+
     for line in &proof.lines {
         if let Formula::Implies(ant, cons) = &line.formula {
             if current_formulas.contains(&ant.as_ref()) && !current_formulas.contains(&cons.as_ref()) {
@@ -397,6 +403,31 @@ mod tests {
         )
         .unwrap();
         assert_eq!(closed["is_complete"], true);
+    }
+
+    #[test]
+    fn set_theory_exercise_gets_its_own_hint() {
+        let track = get_set_theory_track();
+        let ex = track[0].exercises.iter().find(|e| e.id == "halmos-0-1").unwrap().theorem.clone();
+        let proof = create_proof(ex);
+        assert_eq!(get_hint(&proof), "∀E with a for x, then MP.");
+    }
+
+    #[test]
+    fn solved_set_theory_exercise_says_so() {
+        let track = get_set_theory_track();
+        let ex = track[0].exercises.iter().find(|e| e.id == "halmos-0-1").unwrap().theorem.clone();
+        let mut proof = dispatch("create_proof", &serde_json::json!({ "theorem": ex })).unwrap();
+        for (rule, lines, formula) in [("universalElimination", vec![1], "F(a) ⊃ G(a)"), ("modusPonens", vec![3, 2], "G(a)")] {
+            let args = serde_json::json!({
+                "proof": proof,
+                "ruleApplication": { "type": "Inference", "rule": rule, "lines": lines },
+                "formulaStr": formula,
+            });
+            proof = dispatch("apply_rule", &args).unwrap();
+        }
+        let typed: Proof = serde_json::from_value(proof).unwrap();
+        assert!(get_hint(&typed).starts_with("The proof is complete"));
     }
 
     #[test]

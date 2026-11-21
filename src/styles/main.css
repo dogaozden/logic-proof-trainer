@@ -2363,6 +2363,11 @@ body {
     overflow: visible;
   }
 
+  /* Keep the last chapter's counts clear of the fixed settings gear. */
+  .track {
+    padding-bottom: 64px;
+  }
+
   .main-content {
     overflow: visible;
   }
