@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { replaceAsciiSymbols } from '../../utils/asciiSymbols';
 import { invoke } from '@tauri-apps/api/core';
 import { useTheorems } from '../../hooks/useTheorems';
 import { useProof } from '../../hooks/useProof';
@@ -10,33 +11,6 @@ interface CustomTheoremModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreated: (theorem: Theorem) => void;
-}
-
-// Symbol replacements (same as FormulaInput)
-const SYMBOL_REPLACEMENTS: Record<string, string> = {
-  '>': '⊃',
-  'v': '∨',
-  'V': '∨',
-  '&': '.',
-  '<>': '≡',
-  '!': '~',
-};
-
-function applySymbolReplacements(value: string): string {
-  let result = value;
-  // Two-character replacements first
-  for (const [ascii, symbol] of Object.entries(SYMBOL_REPLACEMENTS)) {
-    if (ascii.length === 2) {
-      result = result.replace(new RegExp(ascii.replace(/[<>]/g, '\\$&'), 'g'), symbol);
-    }
-  }
-  // Single-character replacements
-  for (const [ascii, symbol] of Object.entries(SYMBOL_REPLACEMENTS)) {
-    if (ascii.length === 1) {
-      result = result.replace(new RegExp(ascii.replace(/[&]/g, '\\$&'), 'g'), symbol);
-    }
-  }
-  return result;
 }
 
 export const CustomTheoremModal: React.FC<CustomTheoremModalProps> = ({
@@ -80,7 +54,7 @@ export const CustomTheoremModal: React.FC<CustomTheoremModalProps> = ({
 
   const handlePremiseChange = (index: number, value: string) => {
     const newPremises = [...premises];
-    newPremises[index] = applySymbolReplacements(value);
+    newPremises[index] = replaceAsciiSymbols(value);
     setPremises(newPremises);
 
     // Clear error when typing
@@ -90,7 +64,7 @@ export const CustomTheoremModal: React.FC<CustomTheoremModalProps> = ({
   };
 
   const handleConclusionChange = (value: string) => {
-    setConclusion(applySymbolReplacements(value));
+    setConclusion(replaceAsciiSymbols(value));
     setConclusionError(null);
   };
 

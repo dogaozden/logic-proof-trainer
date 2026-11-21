@@ -1,15 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useScratchpad } from '../../hooks/useScratchpad';
 import { SymbolToolbar } from '../shared/SymbolToolbar';
-
-const SYMBOL_REPLACEMENTS: Record<string, string> = {
-  '>': '⊃',
-  'v': '∨',
-  'V': '∨',
-  '&': '.',
-  '<>': '≡',
-  '!': '~',
-};
+import { replaceAsciiSymbols } from '../../utils/asciiSymbols';
 
 type InputMode = 'formula' | 'note';
 
@@ -36,18 +28,7 @@ export const Scratchpad: React.FC = () => {
   const noteInputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleChange = (newValue: string) => {
-    let result = newValue;
-    for (const [ascii, symbol] of Object.entries(SYMBOL_REPLACEMENTS)) {
-      if (ascii.length === 2) {
-        result = result.replace(new RegExp(ascii.replace(/[<>]/g, '\\$&'), 'g'), symbol);
-      }
-    }
-    for (const [ascii, symbol] of Object.entries(SYMBOL_REPLACEMENTS)) {
-      if (ascii.length === 1) {
-        result = result.replace(new RegExp(ascii.replace(/[&]/g, '\\$&'), 'g'), symbol);
-      }
-    }
-    setFormulaInput(result);
+    setFormulaInput(replaceAsciiSymbols(newValue));
   };
 
   const insertSymbol = (symbol: string) => {
