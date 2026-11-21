@@ -10,7 +10,8 @@ import { FitchBox } from './FitchBox';
 import { FormulaInput } from './FormulaInput';
 import { RulePalette } from './RulePalette';
 import type { InferenceRule, EquivalenceRule, ProofTechnique } from '../../types';
-import { inferenceRuleInfo, equivalenceRuleInfo, proofTechniqueInfo } from '../../types';
+import { inferenceRuleInfo, equivalenceRuleInfo, proofTechniqueInfo, theoremIsFirstOrder } from '../../types';
+import { useSetTheoryTrack } from '../../hooks/useSetTheoryTrack';
 import { FormulaDisplay } from '../FormulaDisplay';
 import { parseCommand, abbrevToInference, abbrevToEquivalence } from '../../utils/proofCommandParser';
 
@@ -43,6 +44,9 @@ export const ProofWorkspace: React.FC = () => {
 
   const { saveToPortfolio } = usePortfolio();
   const { copiedFormula, clearCopiedFormula } = useScratchpad();
+  const { exerciseFor } = useSetTheoryTrack();
+  const [showExerciseHint, setShowExerciseHint] = useState(false);
+  useEffect(() => setShowExerciseHint(false), [proof?.theorem.id]);
 
   const [formulaInput, setFormulaInput] = useState('');
   const [selectedInferenceRule, setSelectedInferenceRule] = useState<InferenceRule | null>(null);
@@ -461,6 +465,7 @@ export const ProofWorkspace: React.FC = () => {
 
   const currentDepth = proof.scope_manager.scopes.filter(s => s.end_line === undefined).length;
   const hasOpenSubproof = currentDepth > 0;
+  const firstOrder = theoremIsFirstOrder(proof.theorem);
 
   // Get the current (innermost) scope's technique if there's an open subproof
   const openScopes = proof.scope_manager.scopes.filter(s => s.end_line === undefined);
@@ -575,6 +580,23 @@ export const ProofWorkspace: React.FC = () => {
             </div>
           </div>
 
+          {(() => {
+            const exercise = exerciseFor(proof.theorem.id);
+            if (!exercise) return null;
+            return (
+              <div className="exercise-banner">
+                <span className="exercise-banner-title">Halmos {exercise.id.replace('halmos-', '§').replace(/-(\d+)$/, '.$1')}: {exercise.title}</span>
+                {exercise.axioms.length > 0 && (
+                  <span className="exercise-banner-axioms"> · premises {exercise.axioms.map((a, i) => `${i + 1} = ${a}`).join(', ')}</span>
+                )}
+                <button className="exercise-hint-toggle" onClick={() => setShowExerciseHint(!showExerciseHint)}>
+                  {showExerciseHint ? 'Hide hint' : 'Hint'}
+                </button>
+                {showExerciseHint && <div className="exercise-hint">{exercise.hint}</div>}
+              </div>
+            );
+          })()}
+
           {/* Proof Complete Message */}
           {proof.is_complete && (
             <div className="success-message fade-in">
@@ -654,7 +676,8 @@ export const ProofWorkspace: React.FC = () => {
             value={formulaInput}
             onChange={setFormulaInput}
             onSubmit={handleSubmit}
-            placeholder="Q 1,2 MP  or  Q //1, 2, MP"
+            placeholder={firstOrder ? 'F(a) 1 ∀E   or   F(a) ∃E (open)   or   ∃E (close)' : 'Q 1,2 MP  or  Q //1, 2, MP'}
+            firstOrder={firstOrder}
           />
 
           {/* Selection Info */}
@@ -691,6 +714,7 @@ export const ProofWorkspace: React.FC = () => {
           onSelectInferenceRule={handleSelectInferenceRule}
           onSelectEquivalenceRule={handleSelectEquivalenceRule}
           onSelectTechnique={handleSelectTechnique}
+          firstOrder={firstOrder}
         />
       </div>
     </div>

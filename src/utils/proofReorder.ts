@@ -15,6 +15,8 @@ function getLineDependencies(justification: Justification): number[] {
       return [justification.line];
     case 'SubproofConclusion':
       return [justification.subproof_start, justification.subproof_end];
+    case 'ExistentialElimination':
+      return [justification.existential_line, justification.subproof_start, justification.subproof_end];
     default:
       return [];
   }
@@ -48,7 +50,7 @@ export function canMoveLine(
   }
 
   // Can't move subproof conclusions
-  if (movingLine.justification.type === 'SubproofConclusion') {
+  if (movingLine.justification.type === 'SubproofConclusion' || movingLine.justification.type === 'ExistentialElimination') {
     return { valid: false, reason: 'Cannot move subproof conclusions' };
   }
 
@@ -208,6 +210,13 @@ function updateJustificationReferences(
     case 'SubproofConclusion':
       return {
         ...justification,
+        subproof_start: lineNumberMap.get(justification.subproof_start) ?? justification.subproof_start,
+        subproof_end: lineNumberMap.get(justification.subproof_end) ?? justification.subproof_end,
+      };
+    case 'ExistentialElimination':
+      return {
+        ...justification,
+        existential_line: lineNumberMap.get(justification.existential_line) ?? justification.existential_line,
         subproof_start: lineNumberMap.get(justification.subproof_start) ?? justification.subproof_start,
         subproof_end: lineNumberMap.get(justification.subproof_end) ?? justification.subproof_end,
       };

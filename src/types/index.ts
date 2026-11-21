@@ -6,7 +6,27 @@ export type Formula =
   | { type: 'Or'; value: [Formula, Formula] }
   | { type: 'Implies'; value: [Formula, Formula] }
   | { type: 'Biconditional'; value: [Formula, Formula] }
-  | { type: 'Contradiction' };
+  | { type: 'Contradiction' }
+  | { type: 'Predicate'; value: [string, Term[]] }
+  | { type: 'Identity'; value: [Term, Term] }
+  | { type: 'Membership'; value: [Term, Term] }
+  | { type: 'Subset'; value: [Term, Term] }
+  | { type: 'ForAll'; value: [string, Formula] }
+  | { type: 'Exists'; value: [string, Formula] };
+
+// Terms - mirrors Rust Term enum (names, function terms, set-theory term operators)
+export type Term =
+  | { type: 'Name'; value: string }
+  | { type: 'Function'; value: [string, Term[]] }
+  | { type: 'Empty' }
+  | { type: 'Singleton'; value: Term }
+  | { type: 'Pair'; value: [Term, Term] }
+  | { type: 'OrderedPair'; value: [Term, Term] }
+  | { type: 'Union'; value: [Term, Term] }
+  | { type: 'Intersection'; value: [Term, Term] }
+  | { type: 'Difference'; value: [Term, Term] }
+  | { type: 'PowerSet'; value: Term }
+  | { type: 'BigUnion'; value: Term };
 
 // Difficulty levels - 10 PropBench tiers
 export type Difficulty = 'baby' | 'easy' | 'medium' | 'hard' | 'expert' | 'nightmare' | 'marathon' | 'absurd' | 'cosmic' | 'mind';
@@ -56,7 +76,12 @@ export type InferenceRule =
   | 'hypotheticalSyllogism'// HS: p ⊃ q, q ⊃ r ∴ p ⊃ r
   | 'addition'             // Add: p ∴ p ∨ q or q ∨ p
   | 'constructiveDilemma'  // CD: p ∨ q, p ⊃ r, q ⊃ s ∴ r ∨ s
-  | 'contradiction';       // NegE: p, ~p ∴ ⊥
+  | 'contradiction'        // NegE: p, ~p ∴ ⊥
+  | 'universalElimination'    // ∀E (UI): ∀x φ ∴ φ[t/x]
+  | 'universalIntroduction'   // ∀I (UG): φ[c/x] ∴ ∀x φ, c arbitrary
+  | 'existentialIntroduction' // ∃I (EG): φ[t/x] ∴ ∃x φ
+  | 'identityIntroduction'    // =I: ∴ t = t
+  | 'identityElimination';    // =E: a = b, φ ∴ φ[b for some a]
 
 // Equivalence rules - names match rules.md exactly
 export type EquivalenceRule =
@@ -69,12 +94,15 @@ export type EquivalenceRule =
   | 'implication'          // Impl: (p ⊃ q) :: (~p ∨ q)
   | 'exportation'          // Exp: [(p · q) ⊃ r] :: [p ⊃ (q ⊃ r)]
   | 'tautology'            // Taut: p :: (p · p), p :: (p ∨ p)
-  | 'equivalence';         // Equiv: (p ≡ q) :: [(p ⊃ q) · (q ⊃ p)], or (p · q) ∨ (~p · ~q)
+  | 'equivalence'          // Equiv: (p ≡ q) :: [(p ⊃ q) · (q ⊃ p)], or (p · q) ∨ (~p · ~q)
+  | 'quantifierNegation'   // QN: ~∀xφ :: ∃x~φ, ~∃xφ :: ∀x~φ
+  | 'definition';          // Def: unfold/fold ⊆, ∅, {a}, {a, b}, ∪, ∩, −, ℘, ⋃, ⟨a, b⟩
 
 // Proof techniques
 export type ProofTechnique =
   | 'conditionalProof'
-  | 'indirectProof';
+  | 'indirectProof'
+  | 'existentialElimination';
 
 // Justification for proof lines
 export type Justification =
@@ -85,6 +113,12 @@ export type Justification =
   | {
     type: 'SubproofConclusion';
     technique: ProofTechnique;
+    subproof_start: number;
+    subproof_end: number;
+  }
+  | {
+    type: 'ExistentialElimination';
+    existential_line: number;
     subproof_start: number;
     subproof_end: number;
   };
@@ -210,14 +244,96 @@ export function formulaToString(formula: Formula): string {
   return formulaToStringWithDepth(formula, 0, maxDepth);
 }
 
+// Atomic formulas: sentence letters, ⊥, predications, identities, memberships, inclusions
+export function isAtomic(formula: Formula): boolean {
+  return ['Atom', 'Contradiction', 'Predicate', 'Identity', 'Membership', 'Subset'].includes(formula.type);
+}
+
+// Does the formula use predicate-logic or set-theory syntax anywhere?
+export function isFirstOrder(formula: Formula): boolean {
+  switch (formula.type) {
+    case 'Atom':
+    case 'Contradiction':
+      return false;
+    case 'Not':
+      return isFirstOrder(formula.value);
+    case 'And':
+    case 'Or':
+    case 'Implies':
+    case 'Biconditional':
+      return isFirstOrder(formula.value[0]) || isFirstOrder(formula.value[1]);
+    case 'Predicate':
+    case 'Identity':
+    case 'Membership':
+    case 'Subset':
+    case 'ForAll':
+    case 'Exists':
+      return true;
+  }
+}
+
+export function theoremIsFirstOrder(theorem: Theorem): boolean {
+  return isFirstOrder(theorem.conclusion) || theorem.premises.some(isFirstOrder);
+}
+
+// Negations that need brackets after ~ (binary connectives and ⊆)
+function needsParensForNot(inner: Formula): boolean {
+  return !['Atom', 'Not', 'Contradiction', 'Predicate', 'Identity', 'Membership', 'ForAll', 'Exists'].includes(inner.type);
+}
+
+// A quantifier body that follows ∀x without brackets
+function isTightBody(body: Formula): boolean {
+  if (['Atom', 'Contradiction', 'Predicate', 'ForAll', 'Exists'].includes(body.type)) return true;
+  if (body.type === 'Not') return body.value.type !== 'Identity' && body.value.type !== 'Membership';
+  return false;
+}
+
+export function termToString(term: Term): string {
+  const operand = (t: Term) =>
+    t.type === 'Union' || t.type === 'Intersection' || t.type === 'Difference' ? `(${termToString(t)})` : termToString(t);
+  switch (term.type) {
+    case 'Name':
+      return term.value;
+    case 'Function':
+      return `${term.value[0]}(${term.value[1].map(termToString).join(', ')})`;
+    case 'Empty':
+      return '∅';
+    case 'Singleton':
+      return `{${termToString(term.value)}}`;
+    case 'Pair':
+      return `{${termToString(term.value[0])}, ${termToString(term.value[1])}}`;
+    case 'OrderedPair':
+      return `⟨${termToString(term.value[0])}, ${termToString(term.value[1])}⟩`;
+    case 'Union':
+      return `${operand(term.value[0])} ∪ ${operand(term.value[1])}`;
+    case 'Intersection':
+      return `${operand(term.value[0])} ∩ ${operand(term.value[1])}`;
+    case 'Difference':
+      return `${operand(term.value[0])} − ${operand(term.value[1])}`;
+    case 'PowerSet':
+      return `℘(${termToString(term.value)})`;
+    case 'BigUnion':
+      return `⋃${operand(term.value)}`;
+  }
+}
+
 // Calculate maximum bracket nesting depth needed
 function bracketDepth(formula: Formula): number {
   switch (formula.type) {
     case 'Atom':
     case 'Contradiction':
+    case 'Predicate':
+    case 'Identity':
+    case 'Membership':
+    case 'Subset':
       return 0;
+    case 'ForAll':
+    case 'Exists': {
+      const body = formula.value[1];
+      return isTightBody(body) ? bracketDepth(body) : 1 + bracketDepth(body);
+    }
     case 'Not': {
-      const needsParens = !['Atom', 'Not', 'Contradiction'].includes(formula.value.type);
+      const needsParens = needsParensForNot(formula.value);
       if (needsParens) {
         return 1 + bracketDepth(formula.value);
       }
@@ -236,10 +352,10 @@ function bracketDepth(formula: Formula): number {
 }
 
 function subformulaBracketDepth(formula: Formula): number {
-  if (formula.type === 'Atom' || formula.type === 'Contradiction') {
+  if (isAtomic(formula)) {
     return 0;
   }
-  if (formula.type === 'Not' && formula.value.type === 'Atom') {
+  if (formula.type === 'Not' && isAtomic(formula.value) && formula.value.type !== 'Subset') {
     return 0;
   }
   return 1 + bracketDepth(formula);
@@ -251,8 +367,30 @@ function formulaToStringWithDepth(formula: Formula, currentDepth: number, maxDep
       return formula.value;
     case 'Contradiction':
       return '⊥';
+    case 'Predicate':
+      return `${formula.value[0]}(${formula.value[1].map(termToString).join(', ')})`;
+    case 'Identity':
+      return `${termToString(formula.value[0])} = ${termToString(formula.value[1])}`;
+    case 'Membership':
+      return `${termToString(formula.value[0])} ∈ ${termToString(formula.value[1])}`;
+    case 'Subset':
+      return `${termToString(formula.value[0])} ⊆ ${termToString(formula.value[1])}`;
+    case 'ForAll':
+    case 'Exists': {
+      const [v, body] = formula.value;
+      const q = formula.type === 'ForAll' ? '∀' : '∃';
+      if (isTightBody(body)) return `${q}${v} ${formulaToString(body)}`;
+      const [open, close] = bracketsForLevel(0, bracketDepth(body) + 1);
+      return `${q}${v}${open}${formulaToString(body)}${close}`;
+    }
     case 'Not': {
-      const needsParens = !['Atom', 'Not', 'Contradiction'].includes(formula.value.type);
+      if (formula.value.type === 'Identity') {
+        return `${termToString(formula.value.value[0])} ≠ ${termToString(formula.value.value[1])}`;
+      }
+      if (formula.value.type === 'Membership') {
+        return `${termToString(formula.value.value[0])} ∉ ${termToString(formula.value.value[1])}`;
+      }
+      const needsParens = needsParensForNot(formula.value);
       if (needsParens) {
         const inner = formulaToStringWithDepth(formula.value, currentDepth + 1, maxDepth);
         const [open, close] = bracketsForLevel(currentDepth, maxDepth);
@@ -295,8 +433,8 @@ function bracketsForLevel(currentDepth: number, maxDepth: number): [string, stri
 function wrapIfNeeded(formula: Formula): string {
   const formatted = formulaToString(formula);
 
-  // Atoms and contradictions never need wrapping
-  if (formula.type === 'Atom' || formula.type === 'Contradiction') {
+  // Atomic formulas never need wrapping
+  if (isAtomic(formula)) {
     return formatted;
   }
 
@@ -322,7 +460,18 @@ export const inferenceRuleInfo: Record<InferenceRule, { name: string; abbrev: st
   addition: { name: 'Addition', abbrev: 'Add', premises: 1, symbol: 'p ∴ p ∨ q or q ∨ p' },
   constructiveDilemma: { name: 'Constructive Dilemma', abbrev: 'CD', premises: 3, symbol: 'p ∨ q, p ⊃ r, q ⊃ s ∴ r ∨ s' },
   contradiction: { name: 'Contradiction', abbrev: 'NegE', premises: 2, symbol: 'p, ~p ∴ ⊥' },
+  universalElimination: { name: 'Universal Elimination (UI)', abbrev: '∀E', premises: 1, symbol: '∀x φ ∴ φ[t/x]' },
+  universalIntroduction: { name: 'Universal Introduction (UG)', abbrev: '∀I', premises: 1, symbol: 'φ[c/x] ∴ ∀x φ  (c in no premise or open assumption)' },
+  existentialIntroduction: { name: 'Existential Introduction (EG)', abbrev: '∃I', premises: 1, symbol: 'φ[t/x] ∴ ∃x φ' },
+  identityIntroduction: { name: 'Identity Introduction', abbrev: '=I', premises: 0, symbol: '∴ t = t' },
+  identityElimination: { name: 'Identity Elimination', abbrev: '=E', premises: 2, symbol: 'a = b, φ ∴ φ with some a replaced by b' },
 };
+
+// Inference rules shown only for predicate-logic and set-theory theorems
+export const FIRST_ORDER_INFERENCE_RULES: InferenceRule[] = [
+  'universalElimination', 'universalIntroduction', 'existentialIntroduction', 'identityIntroduction', 'identityElimination',
+];
+export const FIRST_ORDER_EQUIVALENCE_RULES: EquivalenceRule[] = ['quantifierNegation', 'definition'];
 
 export const equivalenceRuleInfo: Record<EquivalenceRule, { name: string; abbrev: string; symbol: string }> = {
   doubleNegation: { name: 'Double Negation', abbrev: 'DN', symbol: 'p :: ~~p' },
@@ -335,11 +484,14 @@ export const equivalenceRuleInfo: Record<EquivalenceRule, { name: string; abbrev
   exportation: { name: 'Exportation', abbrev: 'Exp', symbol: '[(p · q) ⊃ r] :: [p ⊃ (q ⊃ r)]' },
   tautology: { name: 'Tautology', abbrev: 'Taut', symbol: 'p :: (p · p), p :: (p ∨ p)' },
   equivalence: { name: 'Equivalence', abbrev: 'Equiv', symbol: '(p ≡ q) :: [(p ⊃ q) · (q ⊃ p)], or (p · q) ∨ (~p · ~q)' },
+  quantifierNegation: { name: 'Quantifier Negation', abbrev: 'QN', symbol: '~∀xφ :: ∃x~φ, ~∃xφ :: ∀x~φ' },
+  definition: { name: 'Definition', abbrev: 'Def', symbol: 'a ⊆ b :: ∀x(x ∈ a ⊃ x ∈ b), x ∈ a ∪ b :: x ∈ a ∨ x ∈ b, x ∈ a ∩ b :: x ∈ a . x ∈ b, x ∈ a − b :: x ∈ a . x ∉ b, x ∈ {a, b} :: x = a ∨ x = b, x ∈ {a} :: x = a, x ∈ ∅ :: ⊥, x ∈ ℘(a) :: x ⊆ a, x ∈ ⋃a :: ∃y(y ∈ a . x ∈ y), ⟨a, b⟩ = {{a}, {a, b}}' },
 };
 
 export const proofTechniqueInfo: Record<ProofTechnique, { name: string; abbrev: string }> = {
   conditionalProof: { name: 'Conditional Proof', abbrev: 'CP' },
   indirectProof: { name: 'Indirect Proof', abbrev: 'IP' },
+  existentialElimination: { name: 'Existential Elimination (EI)', abbrev: '∃E' },
 };
 
 export function justificationToString(j: Justification): string {
@@ -354,6 +506,8 @@ export function justificationToString(j: Justification): string {
       return `${equivalenceRuleInfo[j.rule].abbrev} ${j.line}`;
     case 'SubproofConclusion':
       return `${proofTechniqueInfo[j.technique].abbrev} ${j.subproof_start}-${j.subproof_end}`;
+    case 'ExistentialElimination':
+      return `∃E ${j.existential_line}, ${j.subproof_start}-${j.subproof_end}`;
   }
 }
 
@@ -396,4 +550,29 @@ export function difficultyLabel(d: Difficulty): string {
     case 'cosmic': return 'Cosmic';
     case 'mind': return 'Mind';
   }
+}
+
+// Set-theory track (Halmos order) - mirrors logic-core's set_theory module
+export interface Axiom {
+  id: string;
+  name: string;
+  formula: Formula;
+  note: string;
+}
+
+export interface TrackExercise {
+  id: string;
+  title: string;
+  hint: string;
+  axioms: string[];
+  theorem: Theorem;
+}
+
+export interface TrackChapter {
+  id: string;
+  number: number;
+  title: string;
+  summary: string;
+  axioms: Axiom[];
+  exercises: TrackExercise[];
 }

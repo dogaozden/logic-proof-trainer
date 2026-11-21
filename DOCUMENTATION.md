@@ -129,6 +129,41 @@ A contradiction can be either `⊥` or a conjunction like `A · ~A` (checked by 
 
 ---
 
+### Predicate Logic and Set Theory
+
+Theorems that use predicates, identity, ∈/⊆ or quantifiers switch the workspace into first-order
+mode: the rule palette gains **Quantifiers, Identity & Sets** and the ∃E subproof, and the symbol
+toolbar gains ∀ ∃ = ≠ ∈ ∉ ⊆ ∪ ∩ − ∅ ℘ { } , ⟨ ⟩ and names. Propositional theorems look and behave
+exactly as before.
+
+| Rule | Hurley | Command | Form |
+|------|--------|---------|------|
+| ∀E | UI | `F(a) ⊃ G(a) 1 ∀E` | ∀x φ ∴ φ[t/x] (no capture) |
+| ∀I | UG | `∀x G(x) 5 ∀I` | φ[c/x] ∴ ∀x φ; c in no premise or open assumption, every c generalized |
+| ∃I | EG | `∃x G(x) 5 ∃I` | φ[t/x] ∴ ∃x φ |
+| ∃E | EI | open `F(a) ∃E`, close `∃E` | from ∃x φ assume φ[c/x], c new; derive ψ without c; conclude ψ (cites `∃E n, i-j`) |
+| =I | | `a = a =I` | t = t, no lines |
+| =E | | `b = a 1,2 =E` | a = b, φ ∴ φ with some a↔b (no capture) |
+| QN | QN | `∃x ~F(x) 1 QN` | ~∀xφ :: ∃x~φ, ~∃xφ :: ∀x~φ (anywhere in the line) |
+| Def | | `a ⊆ a 3 Def` | unfold/fold ⊆, ∅, {a}, {a, b}, ∪, ∩, −, ℘, ⋃, ⟨a, b⟩ (anywhere) |
+
+Typing: `\A x`, `\E x`, `(x)`, `(∃x)` for quantifiers; `!=` becomes ≠; `\in`, `\sub`, `\cup`,
+`\cap`, `\minus`, `\empty`, `\pow`, `<a, b>` for the set symbols. Names are a lowercase letter
+plus digits or primes; predicates are written `F(a)`, `R(a, b)`.
+
+**Set Theory track** (Theorems → Set Theory): Halmos's *Naive Set Theory* chapter by chapter
+(§0 predicate-logic warm-up, §1 Extension, §2 Specification, §3 Pairs, §4 Unions and
+Intersections, §5 Complements and Powers, §6 Ordered Pairs, §7 Relations, §11 Numbers,
+§15 Choice, §19 Foundation). Each chapter lists the ZFC axioms it introduces; exercises carry
+the axioms they use as premises (the banner names them) and a hint. An exercise is ticked once a
+complete proof of it is in the Portfolio (saved automatically on completion). Data and verified
+solutions live in logic-core (`models::set_theory`, `tests/halmos_track.rs`).
+
+**Web build.** `scripts/build-web.sh` compiles `trainer-core` (the commands, shared with
+`src-tauri`) to WebAssembly and builds Vite with `--mode web`, where `src/web/invoke.ts`
+replaces Tauri's `invoke`: proof commands run in WebAssembly, storage uses localStorage. The
+output in `dist/` uses relative paths and can be hosted in any folder.
+
 ## Project Structure
 
 ```

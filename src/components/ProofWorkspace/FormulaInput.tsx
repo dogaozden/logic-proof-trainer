@@ -6,6 +6,7 @@ interface FormulaInputProps {
   onChange: (value: string) => void;
   onSubmit: () => void;
   placeholder?: string;
+  firstOrder?: boolean;
 }
 
 // Symbol replacements: typing these characters auto-converts to logic symbols
@@ -15,6 +16,7 @@ const SYMBOL_REPLACEMENTS: Record<string, string> = {
   'V': '∨',  // Disjunction (uppercase V)
   '&': '.',  // Conjunction
   '<>': '≡', // Biconditional
+  '!=': '≠', // Not identical (before ! becomes ~)
   '!': '~',  // Negation
 };
 
@@ -23,6 +25,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
   onChange,
   onSubmit,
   placeholder = 'Enter formula...',
+  firstOrder = false,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -38,7 +41,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
     let result = newValue;
     for (const [ascii, symbol] of Object.entries(SYMBOL_REPLACEMENTS)) {
       if (ascii.length === 2) {
-        result = result.replace(new RegExp(ascii.replace(/[<>]/g, '\\$&'), 'g'), symbol);
+        result = result.replace(new RegExp(ascii.replace(/[<>!]/g, '\\$&'), 'g'), symbol);
       }
     }
     // Then single-character replacements
@@ -81,7 +84,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
         spellCheck={false}
         autoComplete="off"
       />
-      <SymbolToolbar onSymbolClick={insertSymbol} />
+      <SymbolToolbar onSymbolClick={insertSymbol} firstOrder={firstOrder} />
     </div>
   );
 };

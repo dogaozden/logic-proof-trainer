@@ -2123,3 +2123,270 @@ body {
 .custom-theorem-actions .btn {
   min-width: 100px;
 }
+/* Theorem tracks: Propositional | Set Theory (Halmos) */
+.track-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.track-tab {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.track-tab.active {
+  background: var(--bg-tertiary);
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.track {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.track-intro {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.track-progress-total {
+  margin-top: 4px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.track-chapter {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.track-chapter-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.8rem;
+}
+
+.track-chapter-number {
+  font-family: var(--font-mono);
+  color: var(--accent);
+  min-width: 2.2em;
+}
+
+.track-chapter-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.track-chapter-progress {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.track-chapter-body {
+  padding: 0 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.track-chapter-summary {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.track-axiom {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  padding: 4px 6px;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-primary);
+  overflow-wrap: anywhere;
+}
+
+.track-axiom-name {
+  display: block;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.track-exercise {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg-primary);
+  cursor: pointer;
+}
+
+.track-exercise:hover,
+.track-exercise.active {
+  border-color: var(--accent);
+}
+
+.track-exercise-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+}
+
+.track-exercise-check {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  min-width: 2.4em;
+}
+
+.track-exercise.done .track-exercise-check {
+  color: var(--success, #4caf50);
+  font-weight: 700;
+}
+
+.track-exercise-title {
+  flex: 1;
+  font-weight: 500;
+}
+
+.track-exercise-formula {
+  margin-top: 3px;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.track-exercise-axioms {
+  color: var(--text-secondary);
+}
+
+.exercise-banner {
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.exercise-banner-title {
+  font-weight: 600;
+}
+
+.exercise-banner-axioms {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.exercise-hint-toggle {
+  margin-left: 8px;
+  font-size: 0.72rem;
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.exercise-hint {
+  margin-top: 4px;
+  color: var(--text-secondary);
+}
+
+/* Phone: the sidebar stacks above the proof, the rule palette below it; the page scrolls. */
+@media (max-width: 700px) {
+  .app-container {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .sidebar {
+    width: 100%;
+    max-width: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar.collapsed {
+    display: none;
+  }
+
+  .sidebar-toggle {
+    right: 8px;
+    top: auto;
+    bottom: -12px;
+    transform: rotate(90deg);
+    z-index: 300;
+  }
+
+  .sidebar-toggle-collapsed {
+    left: auto;
+    right: 8px;
+    top: 8px;
+    width: 32px;
+    height: 32px;
+    transform: rotate(90deg);
+    z-index: 300;
+  }
+
+  .tier-card-list,
+  .track {
+    overflow: visible;
+  }
+
+  .main-content {
+    overflow: visible;
+  }
+
+  .workspace-layout {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  .proof-area {
+    overflow: visible;
+    padding: 10px;
+  }
+
+  .rule-palette {
+    position: static;
+    height: auto;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+
+  .proof-line {
+    padding-left: 8px;
+    padding-right: 36px;
+  }
+}

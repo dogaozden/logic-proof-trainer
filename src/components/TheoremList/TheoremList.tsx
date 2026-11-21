@@ -4,6 +4,10 @@ import { useProof } from '../../hooks/useProof';
 import type { Difficulty } from '../../types';
 import { ALL_DIFFICULTIES, difficultyColor, difficultyLabel } from '../../types';
 import { CustomTheoremModal } from './CustomTheoremModal';
+import { SetTheoryTrack } from './SetTheoryTrack';
+
+type Track = 'propositional' | 'setTheory';
+const TRACK_KEY = 'lpt.theoremTrack';
 
 // Unified difficulty mode - either a tier or custom value
 type DifficultyMode =
@@ -18,6 +22,13 @@ export const TheoremList: React.FC = () => {
   const [customInputValue, setCustomInputValue] = useState<string>('50');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
+  const [track, setTrackState] = useState<Track>(
+    () => (localStorage.getItem(TRACK_KEY) === 'setTheory' ? 'setTheory' : 'propositional'),
+  );
+  const setTrack = (t: Track) => {
+    localStorage.setItem(TRACK_KEY, t);
+    setTrackState(t);
+  };
 
   const handleCardClick = (difficulty: Difficulty) => {
     setDifficultyMode({ type: 'tier', value: difficulty });
@@ -65,7 +76,17 @@ export const TheoremList: React.FC = () => {
     <>
       <div className="theorem-list-header">
         <h2>Theorems</h2>
+        <div className="track-tabs">
+          <button className={`track-tab ${track === 'propositional' ? 'active' : ''}`} onClick={() => setTrack('propositional')}>
+            Propositional
+          </button>
+          <button className={`track-tab ${track === 'setTheory' ? 'active' : ''}`} onClick={() => setTrack('setTheory')}>
+            Set Theory
+          </button>
+        </div>
       </div>
+
+      {track === 'setTheory' ? <SetTheoryTrack /> : <>
 
       {/* Scrollable 10-Tier Cards */}
       <div className="tier-card-list">
@@ -156,6 +177,8 @@ export const TheoremList: React.FC = () => {
           </button>
         </div>
       </div>
+
+      </>}
 
       {/* Custom Theorem Modal */}
       <CustomTheoremModal

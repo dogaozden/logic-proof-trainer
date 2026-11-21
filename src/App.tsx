@@ -11,6 +11,8 @@ import './styles/main.css';
 
 type View = 'theorems' | 'scratchpad' | 'portfolio';
 
+const PHONE = '(max-width: 700px)';
+
 function App() {
   const [view, setView] = useState<View>('theorems');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -29,6 +31,11 @@ function App() {
     // Detect when proof changes from null to non-null (new proof started)
     if (proof && !prevProofRef.current) {
       setView('scratchpad');
+    }
+    // On a phone the sidebar stacks above the proof; fold it away when a proof starts.
+    if (proof && proof.theorem.id !== prevProofRef.current?.theorem.id && window.matchMedia(PHONE).matches) {
+      setSidebarCollapsed(true);
+      window.scrollTo(0, 0);
     }
     prevProofRef.current = proof;
   }, [proof]);

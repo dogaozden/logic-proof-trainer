@@ -168,7 +168,8 @@ export const SortableProofLine: React.FC<ProofLineProps> = (props) => {
   // Check if this line can be dragged (not premise, assumption, or conclusion)
   const canDrag = line.justification.type !== 'Premise' &&
     line.justification.type !== 'Assumption' &&
-    line.justification.type !== 'SubproofConclusion';
+    line.justification.type !== 'SubproofConclusion' &&
+    line.justification.type !== 'ExistentialElimination';
 
   return (
     <div

@@ -1,0 +1,11 @@
+# The shared command crate and its WebAssembly wrapper. The Tauri app (src-tauri) is a
+# separate package that depends on trainer-core by path.
+[workspace]
+resolver = "2"
+members = ["trainer-core", "src-wasm"]
+exclude = ["src-tauri"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1

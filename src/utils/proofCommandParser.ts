@@ -30,6 +30,18 @@ const inferenceAliases: Record<string, InferenceRule> = {
   // Constructive Dilemma (CD)
   'dil': 'constructiveDilemma',
   'dilemma': 'constructiveDilemma',
+  // Quantifier and identity rules: Fitch names (∀E …) are the abbreviations; Hurley's and
+  // ASCII spellings here
+  'ui': 'universalElimination',
+  'ae': 'universalElimination',
+  'ug': 'universalIntroduction',
+  'ai': 'universalIntroduction',
+  'eg': 'existentialIntroduction',
+  'idi': 'identityIntroduction',
+  'refl': 'identityIntroduction',
+  'ide': 'identityElimination',
+  'id': 'identityElimination',
+  'leibniz': 'identityElimination',
 };
 Object.assign(abbrevToInference, inferenceAliases);
 
@@ -65,6 +77,8 @@ const equivalenceAliases: Record<string, EquivalenceRule> = {
   // Equivalence (Equiv)
   'eq': 'equivalence',
   'bicon': 'equivalence',
+  'definition': 'definition',
+  'df': 'definition',
 };
 Object.assign(abbrevToEquivalence, equivalenceAliases);
 
@@ -86,6 +100,9 @@ const techniqueAliases: Record<string, ProofTechnique> = {
   'negi': 'indirectProof',
   '~i': 'indirectProof',
   'ni': 'indirectProof',
+  // ∃E (Hurley's EI, as a subproof)
+  'ei': 'existentialElimination',
+  'ee': 'existentialElimination',
 };
 Object.assign(abbrevToTechnique, techniqueAliases);
 
@@ -118,7 +135,10 @@ Object.assign(abbrevToTechnique, techniqueAliases);
 // =============================================================================
 
 // Regex for matching technique abbreviations (CP, IP, ~I, NI)
-const TECHNIQUE_PATTERN = /^(cp|ip|~i|ni)$/i;
+const TECHNIQUE_PATTERN = /^(cp|ip|~i|ni|∃e|ei|ee)$/i;
+
+// Rule names: letters plus the quantifier and identity symbols (∀E, ∃I, =E …)
+const RULE = '[A-Za-z~∀∃=]+';
 
 // Regex for matching line ranges like "2-5" or "2–5" (en-dash)
 const LINE_RANGE_PATTERN = /(\d+)\s*[-–]\s*(\d+)/;
@@ -165,7 +185,7 @@ export function parseCommand(input: string): ParseResult {
   if (!trimmed) return null;
 
   // Extract the last word (potential rule/technique)
-  const lastWordMatch = trimmed.match(/\s+([A-Za-z~]+)$/i);
+  const lastWordMatch = trimmed.match(new RegExp(`\\s+(${RULE})$`, 'i'));
   const lastWord = lastWordMatch ? lastWordMatch[1] : trimmed;
   const lastWordLower = lastWord.toLowerCase();
 
@@ -230,7 +250,7 @@ export function parseCommand(input: string): ParseResult {
 
   // Format A: "FORMULA LINES RULE" (e.g., "Q 1,2 MP" or "Q 1 2 MP")
   // The lines can be comma-separated or space-separated
-  const formatAMatch = trimmed.match(/^(.+?)\s+(\d[\d\s,]*\d|\d)\s+([A-Za-z~]+)$/);
+  const formatAMatch = trimmed.match(new RegExp(`^(.+?)\\s+(\\d[\\d\\s,]*\\d|\\d)\\s+(${RULE})$`));
   if (formatAMatch) {
     const formula = formatAMatch[1].trim();
     const linesPart = formatAMatch[2];
@@ -256,7 +276,7 @@ export function parseCommand(input: string): ParseResult {
   }
 
   // Format B: "RULE LINES [FORMULA]" (e.g., "MP 1,2" or "MP 1,2 Q")
-  const formatBMatch = trimmed.match(/^([A-Za-z~]+)\s+(\d[\d\s,]*\d|\d)(?:\s*,?\s*(.*))?$/);
+  const formatBMatch = trimmed.match(new RegExp(`^(${RULE})\\s+(\\d[\\d\\s,]*\\d|\\d)(?:\\s*,?\\s*(.*))?$`));
   if (formatBMatch) {
     const rule = formatBMatch[1];
     const linesPart = formatBMatch[2];
@@ -277,6 +297,17 @@ export function parseCommand(input: string): ParseResult {
           rule,
           ruleType: rType,
         };
+      }
+    }
+  }
+
+  // Format D: "FORMULA RULE" for a rule that cites no lines (=I: "a = a =I")
+  if (lastWordMatch && ruleType === 'inference') {
+    const rule = abbrevToInference[lastWordLower];
+    if (inferenceRuleInfo[rule].premises === 0) {
+      const formula = trimmed.substring(0, lastWordMatch.index).trim();
+      if (formula) {
+        return { type: 'ruleApplication', formula, lines: [], rule: lastWord, ruleType: 'inference' };
       }
     }
   }

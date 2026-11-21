@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import type { Proof, InferenceRule, EquivalenceRule, TransformationResult } from '../types';
-import { inferenceRuleInfo, equivalenceRuleInfo, formulaToString } from '../types';
+import { inferenceRuleInfo, equivalenceRuleInfo, formulaToString, FIRST_ORDER_INFERENCE_RULES } from '../types';
 
 interface UseProofAutoApplyOptions {
   proof: Proof | null;
@@ -36,7 +36,9 @@ export function useProofAutoApply({
     const info = inferenceRuleInfo[rule];
     if (lines.length === info.premises) {
       // For rules that don't need additional input, auto-apply without formula
-      if (!['addition'].includes(rule)) {
+      // Addition and the quantifier/identity rules need the formula typed: their result is not
+      // determined by the cited lines alone.
+      if (rule !== 'addition' && !FIRST_ORDER_INFERENCE_RULES.includes(rule)) {
         const success = await applyInferenceRule(rule, lines, '');
         if (success) {
           setSelectedInferenceRule(null);

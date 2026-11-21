@@ -1,6 +1,9 @@
 import React from 'react';
 import type { InferenceRule, EquivalenceRule, ProofTechnique } from '../../types';
-import { inferenceRuleInfo, equivalenceRuleInfo, proofTechniqueInfo } from '../../types';
+import {
+  inferenceRuleInfo, equivalenceRuleInfo, proofTechniqueInfo,
+  FIRST_ORDER_INFERENCE_RULES, FIRST_ORDER_EQUIVALENCE_RULES,
+} from '../../types';
 
 interface RulePaletteProps {
   selectedInferenceRule: InferenceRule | null;
@@ -10,6 +13,8 @@ interface RulePaletteProps {
   onSelectInferenceRule: (rule: InferenceRule | null) => void;
   onSelectEquivalenceRule: (rule: EquivalenceRule | null) => void;
   onSelectTechnique: (technique: ProofTechnique | null) => void;
+  /** Show the quantifier, identity and set-theory rules (predicate-logic theorems) */
+  firstOrder: boolean;
 }
 
 // Inference rules - matches rules.md order (1-8)
@@ -50,6 +55,7 @@ export const RulePalette: React.FC<RulePaletteProps> = ({
   onSelectInferenceRule,
   onSelectEquivalenceRule,
   onSelectTechnique,
+  firstOrder,
 }) => {
   const handleInferenceClick = (rule: InferenceRule) => {
     if (selectedInferenceRule === rule) {
@@ -137,15 +143,62 @@ export const RulePalette: React.FC<RulePaletteProps> = ({
         </div>
       </div>
 
+      {firstOrder && (
+        <div className="rule-category">
+          <div className="rule-category-title">Quantifiers, Identity & Sets</div>
+          <div className="rule-list">
+            {FIRST_ORDER_INFERENCE_RULES.map((rule) => {
+              const info = inferenceRuleInfo[rule];
+              return (
+                <button
+                  key={rule}
+                  className={`rule-button ${selectedInferenceRule === rule ? 'selected' : ''}`}
+                  onClick={() => handleInferenceClick(rule)}
+                  title={info.symbol}
+                >
+                  <div className="rule-button-content">
+                    <div className="rule-header">
+                      <span className="rule-abbreviation">{info.abbrev}</span>
+                      <span className="rule-name">{info.name}</span>
+                    </div>
+                    <div className="rule-symbol">{info.symbol}</div>
+                  </div>
+                </button>
+              );
+            })}
+            {FIRST_ORDER_EQUIVALENCE_RULES.map((rule) => {
+              const info = equivalenceRuleInfo[rule];
+              return (
+                <button
+                  key={rule}
+                  className={`rule-button ${selectedEquivalenceRule === rule ? 'selected' : ''}`}
+                  onClick={() => handleEquivalenceClick(rule)}
+                  title={info.symbol}
+                >
+                  <div className="rule-button-content">
+                    <div className="rule-header">
+                      <span className="rule-abbreviation">{info.abbrev}</span>
+                      <span className="rule-name">{info.name}</span>
+                    </div>
+                    <div className="rule-symbol">{info.symbol}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Proof Techniques */}
       <div className="rule-category">
-        <div className="rule-category-title">Conditional & Indirect Proof</div>
+        <div className="rule-category-title">{firstOrder ? 'Subproofs' : 'Conditional & Indirect Proof'}</div>
         <div className="rule-list">
-          {TECHNIQUES.map((technique) => {
+          {(firstOrder ? [...TECHNIQUES, 'existentialElimination' as const] : TECHNIQUES).map((technique) => {
             const info = proofTechniqueInfo[technique];
             const symbolMap: Record<ProofTechnique, string> = {
               conditionalProof: 'Assume p... derive q ∴ p ⊃ q',
               indirectProof: 'Assume p... derive q · ~q ∴ ~p (or vice versa)',
+              existentialElimination: 'From ∃x φ: assume φ[c/x], c new... derive ψ (no c) ∴ ψ',
             };
             const isOpen = openSubproofTechnique === technique;
             const buttonClass = `rule-button ${selectedTechnique === technique ? 'selected' : ''} ${isOpen ? 'subproof-open' : ''}`;
