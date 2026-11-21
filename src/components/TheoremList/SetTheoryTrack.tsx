@@ -63,7 +63,7 @@ export const SetTheoryTrack: React.FC = () => {
         return (
           <div key={chapter.id} className={`track-chapter ${isOpen ? 'open' : ''}`}>
             <button className="track-chapter-header" onClick={() => setOpenChapter(isOpen ? null : chapter.id)}>
-              <span className="track-chapter-number">{chapter.number === 0 ? '§0' : `§${chapter.number}`}</span>
+              <span className="track-chapter-number">{chapter.number === null ? 'App.' : `§${chapter.number}`}</span>
               <span className="track-chapter-title">{chapter.title}</span>
               <span className="track-chapter-progress">{doneHere}/{chapter.exercises.length}</span>
             </button>
@@ -87,7 +87,7 @@ export const SetTheoryTrack: React.FC = () => {
                       data-exercise={exercise.id}
                     >
                       <div className="track-exercise-header">
-                        <span className="track-exercise-check">{done.has(exercise.id) ? '✓' : `${chapter.number}.${i + 1}`}</span>
+                        <span className="track-exercise-check">{done.has(exercise.id) ? '✓' : `${chapter.number ?? 'App'}.${i + 1}`}</span>
                         <span className="track-exercise-title">{exercise.title}</span>
                         <span className="tier-card-badge" style={{ backgroundColor: difficultyColor(level.tier), color: 'white' }}>
                           {level.label}

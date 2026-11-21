@@ -575,7 +575,8 @@ export interface TrackExercise {
 
 export interface TrackChapter {
   id: string;
-  number: number;
+  /** Halmos section number; null for material outside the book (the appendix). */
+  number: number | null;
   title: string;
   summary: string;
   axioms: Axiom[];
