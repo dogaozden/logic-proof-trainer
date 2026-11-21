@@ -25,6 +25,7 @@ const FIRST_ORDER_SYMBOLS = [
   { symbol: '∪', description: 'Union' },
   { symbol: '∩', description: 'Intersection' },
   { symbol: '−', description: 'Relative complement' },
+  { symbol: '×', description: 'Cartesian product' },
   { symbol: '∅', description: 'Empty set' },
   { symbol: '℘', description: 'Power set' },
   { symbol: '{', description: 'Set braces' },

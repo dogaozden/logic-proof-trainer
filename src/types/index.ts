@@ -25,6 +25,7 @@ export type Term =
   | { type: 'Union'; value: [Term, Term] }
   | { type: 'Intersection'; value: [Term, Term] }
   | { type: 'Difference'; value: [Term, Term] }
+  | { type: 'Product'; value: [Term, Term] }
   | { type: 'PowerSet'; value: Term }
   | { type: 'BigUnion'; value: Term };
 
@@ -96,7 +97,7 @@ export type EquivalenceRule =
   | 'tautology'            // Taut: p :: (p · p), p :: (p ∨ p)
   | 'equivalence'          // Equiv: (p ≡ q) :: [(p ⊃ q) · (q ⊃ p)], or (p · q) ∨ (~p · ~q)
   | 'quantifierNegation'   // QN: ~∀xφ :: ∃x~φ, ~∃xφ :: ∀x~φ
-  | 'definition';          // Def: unfold/fold ⊆, ∅, {a}, {a, b}, ∪, ∩, −, ℘, ⋃, ⟨a, b⟩
+  | 'definition';          // Def: unfold/fold ⊆, ∅, {a}, {a, b}, ∪, ∩, −, ℘, ⋃, ×, ⟨a, b⟩, Fun
 
 // Proof techniques
 export type ProofTechnique =
@@ -290,7 +291,9 @@ function isTightBody(body: Formula): boolean {
 
 export function termToString(term: Term): string {
   const operand = (t: Term) =>
-    t.type === 'Union' || t.type === 'Intersection' || t.type === 'Difference' ? `(${termToString(t)})` : termToString(t);
+    t.type === 'Union' || t.type === 'Intersection' || t.type === 'Difference' || t.type === 'Product'
+      ? `(${termToString(t)})`
+      : termToString(t);
   switch (term.type) {
     case 'Name':
       return term.value;
@@ -310,6 +313,8 @@ export function termToString(term: Term): string {
       return `${operand(term.value[0])} ∩ ${operand(term.value[1])}`;
     case 'Difference':
       return `${operand(term.value[0])} − ${operand(term.value[1])}`;
+    case 'Product':
+      return `${operand(term.value[0])} × ${operand(term.value[1])}`;
     case 'PowerSet':
       return `℘(${termToString(term.value)})`;
     case 'BigUnion':
@@ -485,7 +490,7 @@ export const equivalenceRuleInfo: Record<EquivalenceRule, { name: string; abbrev
   tautology: { name: 'Tautology', abbrev: 'Taut', symbol: 'p :: (p · p), p :: (p ∨ p)' },
   equivalence: { name: 'Equivalence', abbrev: 'Equiv', symbol: '(p ≡ q) :: [(p ⊃ q) · (q ⊃ p)], or (p · q) ∨ (~p · ~q)' },
   quantifierNegation: { name: 'Quantifier Negation', abbrev: 'QN', symbol: '~∀xφ :: ∃x~φ, ~∃xφ :: ∀x~φ' },
-  definition: { name: 'Definition', abbrev: 'Def', symbol: 'a ⊆ b :: ∀x(x ∈ a ⊃ x ∈ b), x ∈ a ∪ b :: x ∈ a ∨ x ∈ b, x ∈ a ∩ b :: x ∈ a . x ∈ b, x ∈ a − b :: x ∈ a . x ∉ b, x ∈ {a, b} :: x = a ∨ x = b, x ∈ {a} :: x = a, x ∈ ∅ :: ⊥, x ∈ ℘(a) :: x ⊆ a, x ∈ ⋃a :: ∃y(y ∈ a . x ∈ y), ⟨a, b⟩ = {{a}, {a, b}}' },
+  definition: { name: 'Definition', abbrev: 'Def', symbol: 'a ⊆ b :: ∀x(x ∈ a ⊃ x ∈ b), x ∈ a ∪ b :: x ∈ a ∨ x ∈ b, x ∈ a ∩ b :: x ∈ a . x ∈ b, x ∈ a − b :: x ∈ a . x ∉ b, x ∈ {a, b} :: x = a ∨ x = b, x ∈ {a} :: x = a, x ∈ ∅ :: ⊥, x ∈ ℘(a) :: x ⊆ a, x ∈ ⋃a :: ∃y(y ∈ a . x ∈ y), x ∈ a × b :: ∃y∃z(y ∈ a . z ∈ b . x = ⟨y, z⟩), ⟨a, b⟩ = {{a}, {a, b}}, Fun(f, a, b) :: f ⊆ a × b . ∀x(x ∈ a ⊃ ∃y(⟨x, y⟩ ∈ f . ∀z(⟨x, z⟩ ∈ f ⊃ z = y)))' },
 };
 
 export const proofTechniqueInfo: Record<ProofTechnique, { name: string; abbrev: string }> = {

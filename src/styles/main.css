@@ -2375,6 +2375,7 @@ body {
   }
 
   .app-container:has(.sidebar:not(.collapsed)) .settings-gear {
+    position: absolute;
     top: 8px;
     bottom: auto;
     right: 8px;
