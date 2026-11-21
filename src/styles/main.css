@@ -2363,9 +2363,21 @@ body {
     overflow: visible;
   }
 
-  /* Keep the last chapter's counts clear of the fixed settings gear. */
-  .track {
+  /* Keep the last row (chapter counts, theorem badges) clear of the fixed settings gear. */
+  .track,
+  .tier-card-list {
     padding-bottom: 64px;
+  }
+
+  /* While the list is open, the gear sits in the top nav bar beside the tabs, not over the rows. */
+  .sidebar-nav {
+    padding-right: 44px;
+  }
+
+  .app-container:has(.sidebar:not(.collapsed)) .settings-gear {
+    top: 8px;
+    bottom: auto;
+    right: 8px;
   }
 
   .main-content {
