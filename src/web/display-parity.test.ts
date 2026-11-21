@@ -20,7 +20,7 @@ describe('formula display parity with logic-core', () => {
     ...c.axioms.map((a) => a.formula),
     ...c.exercises.flatMap((e) => [...e.theorem.premises, e.theorem.conclusion]),
   ]);
-  for (const extra of ['~∀x(F(x) . G(x))', '∀x ~(x ∈ a)', '(∀x F(x)) . P', '~(a ⊆ b) ∨ a ∉ b', '~~(a = b)', '⋃(a ∪ b) = c', 'x ∈ a × b ∪ c', 'x ∈ (a ∪ b) × c', 'Fun(f, a, b)']) {
+  for (const extra of ['~∀x(F(x) . G(x))', '∀x ~(x ∈ a)', '(∀x F(x)) . P', '~(a ⊆ b) ∨ a ∉ b', '~~(a = b)', '⋃(a ∪ b) = c', 'x ∈ a × b ∪ c', 'x ∈ (a ∪ b) × c', 'Fun(f, a, b)', 'Rev(f, g)', 'Comp(g, f, h)']) {
     formulas.push(call<Formula>('parse_formula', { input: extra }));
   }
 
