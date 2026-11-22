@@ -13,7 +13,7 @@ crate-type = ["lib", "cdylib", "staticlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-logic-core = { git = "https://github.com/dogaozden/logic-core", tag = "v0.6.0" }
+logic-core = { git = "https://github.com/dogaozden/logic-core", tag = "v0.9.0" }
 trainer-core = { path = "../trainer-core" }
 tauri = { version = "2", features = [] }
 tauri-plugin-shell = "2"
