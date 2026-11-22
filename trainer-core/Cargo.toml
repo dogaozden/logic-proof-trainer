@@ -5,7 +5,7 @@ description = "The Logic Proof Trainer's commands, shared by the Tauri app and t
 edition = "2021"
 
 [dependencies]
-logic-core = { git = "https://github.com/dogaozden/logic-core", tag = "v0.4.5" }
+logic-core = { git = "https://github.com/dogaozden/logic-core", tag = "v0.5.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 rand = "0.8"
