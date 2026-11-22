@@ -6,6 +6,8 @@ interface FormulaDisplayProps {
   formula: Formula | string;
   className?: string;
   style?: React.CSSProperties;
+  /** Inside a clickable row: brackets never collapse, so a click reaches the row. */
+  previewOnly?: boolean;
 }
 
 interface BracketPair {
@@ -24,8 +26,10 @@ interface AllBracketPair {
   bracketType: '(' | '[' | '{';
 }
 
-export const FormulaDisplay: React.FC<FormulaDisplayProps> = ({ formula, className, style }) => {
-  const { coloredBrackets, showBracketLines, collapsibleBrackets } = useTheme();
+export const FormulaDisplay: React.FC<FormulaDisplayProps> = ({ formula, className, style, previewOnly }) => {
+  const { coloredBrackets, showBracketLines, collapsibleBrackets: collapsibleSetting } = useTheme();
+  // A preview inside a clickable row: a bracket click must reach the row (start the proof), not collapse.
+  const collapsibleBrackets = collapsibleSetting && !previewOnly;
   const text = typeof formula === 'string' ? formula : formulaToString(formula);
   const containerRef = useRef<HTMLSpanElement>(null);
   const bracketRefs = useRef<Map<number, HTMLSpanElement>>(new Map());

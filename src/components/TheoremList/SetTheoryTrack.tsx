@@ -100,11 +100,11 @@ export const SetTheoryTrack: React.FC = () => {
                         {exercise.theorem.premises.length > exercise.axioms.length && (
                           <>
                             {exercise.theorem.premises.slice(exercise.axioms.length).map((p, k) => (
-                              <span key={k}>{k > 0 ? ', ' : ''}<FormulaDisplay formula={p} /></span>
+                              <span key={k}>{k > 0 ? ', ' : ''}<FormulaDisplay formula={p} previewOnly /></span>
                             ))}{' '}
                           </>
                         )}
-                        {'⊢ '}<FormulaDisplay formula={exercise.theorem.conclusion} />
+                        {'⊢ '}<FormulaDisplay formula={exercise.theorem.conclusion} previewOnly />
                       </div>
                     </div>
                   );
