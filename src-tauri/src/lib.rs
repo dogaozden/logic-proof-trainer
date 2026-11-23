@@ -19,6 +19,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_classic_theorems,
             get_set_theory_track,
+            generate_first_order_theorem,
             generate_theorem,
             generate_theorem_with_value,
             generate_theorem_by_tier,

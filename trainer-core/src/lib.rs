@@ -7,7 +7,11 @@ use logic_core::models::{
     theorem::{get_classic_theorems as get_classics, Difficulty, DifficultyTier},
     Formula, Justification, Proof, Theorem,
 };
-use logic_core::services::{GeneratedTheorem, ObfuscateGenerator, ProofVerifier, TheoremGenerator};
+use logic_core::services::{
+    generate_first_order, is_generated_first_order_id, regenerate_first_order, GeneratedTheorem, ObfuscateGenerator,
+    ProofVerifier, TheoremGenerator,
+};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 // ============ Theorem Commands ============
@@ -46,6 +50,15 @@ pub fn generate_theorem_by_tier(tier: &str) -> Result<Theorem, String> {
 pub fn generate_theorem_with_proof(difficulty: Difficulty) -> GeneratedTheorem {
     let generator = TheoremGenerator::with_difficulty(difficulty);
     generator.generate_with_proof(difficulty)
+}
+
+/// A monadic predicate-logic theorem grown forward with its own verified proof. Its id
+/// (`fo-gen-LEVEL-SEED`) regenerates it, which is how `get_hint` finds the proof's rules.
+pub fn generate_first_order_theorem(difficulty: Difficulty) -> Result<Theorem, String> {
+    let seed = rand::thread_rng().gen_range(0..1_000_000_000u64);
+    generate_first_order(difficulty, seed)
+        .map(|c| c.theorem)
+        .map_err(|e| format!("no predicate theorem generated: {e:?}"))
 }
 
 /// The set-theory track: ZFC axioms and exercises in Halmos's order.
@@ -187,6 +200,12 @@ pub fn get_hint(proof: &Proof) -> String {
 
     if current_formulas.iter().any(|f| f.alpha_eq(conclusion)) {
         return "The proof is complete! The conclusion has been derived.".to_string();
+    }
+
+    if is_generated_first_order_id(&proof.theorem.id) {
+        if let Ok(generated) = regenerate_first_order(&proof.theorem.id) {
+            return generated.hint();
+        }
     }
 
     // Set-theory exercises carry a hand-written hint that names the rules they need. The
@@ -336,6 +355,7 @@ pub fn dispatch(command: &str, args: &serde_json::Value) -> Result<serde_json::V
         "generate_theorem_with_value" => ok(generate_theorem_with_value(arg(args, "difficultyValue")?)?),
         "generate_theorem_by_tier" => ok(generate_theorem_by_tier(&arg::<String>(args, "tier")?)?),
         "get_set_theory_track" => ok(get_set_theory_track()),
+        "generate_first_order_theorem" => ok(generate_first_order_theorem(arg(args, "difficulty")?)?),
         "create_proof" => ok(create_proof(arg(args, "theorem")?)),
         "apply_rule" => ok(apply_rule(
             arg(args, "proof")?,
@@ -428,6 +448,38 @@ mod tests {
         }
         let typed: Proof = serde_json::from_value(proof).unwrap();
         assert!(get_hint(&typed).starts_with("The proof is complete"));
+    }
+
+    #[test]
+    fn generated_first_order_theorem_has_a_proof_hint_and_solves_through_dispatch() {
+        let theorem = dispatch("generate_first_order_theorem", &serde_json::json!({ "difficulty": "medium" })).unwrap();
+        let typed: Theorem = serde_json::from_value(theorem.clone()).unwrap();
+        assert!(typed.id.starts_with("fo-gen-medium-"));
+        assert!(typed.conclusion.is_first_order());
+        let proof = create_proof(typed.clone());
+        assert!(get_hint(&proof).starts_with("There is a"), "{}", get_hint(&proof));
+        // Replay the generator's own proof through the trainer commands.
+        let solution = regenerate_first_order(&typed.id).unwrap().proof;
+        let mut p = dispatch("create_proof", &serde_json::json!({ "theorem": theorem })).unwrap();
+        for line in solution.lines.iter().skip(typed.premises.len()) {
+            let f = line.formula.display_string();
+            let (cmd, args) = match &line.justification {
+                Justification::Assumption { technique } => ("open_subproof", serde_json::json!({ "technique": technique, "assumptionStr": f })),
+                Justification::Inference { rule, lines } => (
+                    "apply_rule",
+                    serde_json::json!({ "ruleApplication": { "type": "Inference", "rule": rule, "lines": lines }, "formulaStr": f }),
+                ),
+                Justification::SubproofConclusion { technique, .. } => ("close_subproof", serde_json::json!({ "technique": technique, "conclusionStr": f })),
+                Justification::ExistentialElimination { .. } => {
+                    ("close_subproof", serde_json::json!({ "technique": "existentialElimination", "conclusionStr": f }))
+                }
+                other => panic!("unexpected {other:?}"),
+            };
+            let mut a = args;
+            a["proof"] = p;
+            p = dispatch(cmd, &a).unwrap_or_else(|e| panic!("{cmd} {f}: {e}"));
+        }
+        assert_eq!(p["is_complete"], true);
     }
 
     #[test]

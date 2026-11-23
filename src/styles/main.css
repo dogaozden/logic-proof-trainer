@@ -2169,6 +2169,41 @@ body {
   color: var(--accent);
 }
 
+.track-practice {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.track-practice-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.track-practice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.track-practice-level {
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.track-practice-generate {
+  margin-left: auto;
+}
+
 .track-chapter {
   border: 1px solid var(--border);
   border-radius: 6px;

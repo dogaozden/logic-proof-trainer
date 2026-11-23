@@ -40,6 +40,11 @@ pub fn generate_theorem_with_proof(difficulty: Difficulty) -> GeneratedTheorem {
 }
 
 #[tauri::command]
+pub fn generate_first_order_theorem(difficulty: Difficulty) -> Result<Theorem, String> {
+    trainer_core::generate_first_order_theorem(difficulty)
+}
+
+#[tauri::command]
 pub fn get_set_theory_track() -> Vec<TrackChapter> {
     trainer_core::get_set_theory_track()
 }

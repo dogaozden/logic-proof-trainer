@@ -6,6 +6,8 @@ import { useTheorems } from '../../hooks/useTheorems';
 import type { Difficulty, TrackExercise } from '../../types';
 import { difficultyColor } from '../../types';
 import { FormulaDisplay } from '../FormulaDisplay';
+import { invoke } from '@tauri-apps/api/core';
+import type { Theorem } from '../../types';
 
 // Exercise levels use the four preset difficulties; colors follow the tier palette.
 const LEVEL: Record<string, { label: string; tier: Difficulty }> = {
@@ -13,6 +15,51 @@ const LEVEL: Record<string, { label: string; tier: Difficulty }> = {
   medium: { label: 'Medium', tier: 'medium' },
   hard: { label: 'Hard', tier: 'hard' },
   expert: { label: 'Expert', tier: 'expert' },
+};
+
+const PRACTICE_LEVELS: Difficulty[] = ['easy', 'medium', 'hard', 'expert'];
+
+/// Generated monadic predicate-logic theorems (∀E, ∀I, ∃I, ∃E, MP, Simp, Conj, CP), each with a
+/// verified proof behind it in logic-core.
+const PredicatePractice: React.FC<{ onStart: (theorem: Theorem) => Promise<void> }> = ({ onStart }) => {
+  const [level, setLevel] = useState<Difficulty>('easy');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const generate = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const theorem = await invoke<Theorem>('generate_first_order_theorem', { difficulty: level });
+      await onStart(theorem);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="track-practice">
+      <div className="track-practice-title">Predicate logic practice</div>
+      <div className="track-practice-row">
+        {PRACTICE_LEVELS.map((d) => (
+          <button
+            key={d}
+            className={`track-practice-level ${level === d ? 'active' : ''}`}
+            style={level === d ? { backgroundColor: difficultyColor(d), borderColor: difficultyColor(d), color: 'white' } : undefined}
+            onClick={() => setLevel(d)}
+          >
+            {LEVEL[d].label}
+          </button>
+        ))}
+        <button className="btn btn-primary track-practice-generate" onClick={generate} disabled={busy}>
+          {busy ? 'Generating…' : 'Generate'}
+        </button>
+      </div>
+      {error && <div className="error-message">{error}</div>}
+    </div>
+  );
 };
 
 export const SetTheoryTrack: React.FC = () => {
@@ -40,10 +87,11 @@ export const SetTheoryTrack: React.FC = () => {
     }
   }, [chapters, done, openChapter]);
 
-  const start = async (exercise: TrackExercise) => {
-    selectTheorem(exercise.theorem);
-    await createProof(exercise.theorem);
+  const startTheorem = async (theorem: Theorem) => {
+    selectTheorem(theorem);
+    await createProof(theorem);
   };
+  const start = (exercise: TrackExercise) => startTheorem(exercise.theorem);
 
   if (error) return <div className="error-message">{error}</div>;
 
@@ -57,6 +105,7 @@ export const SetTheoryTrack: React.FC = () => {
         Halmos introduces them; Def unfolds ⊆, ∅, {'{a, b}'}, ∪, ∩, −, ℘ and ⟨a, b⟩.
         <div className="track-progress-total">{finished} / {total} proved</div>
       </div>
+      <PredicatePractice onStart={startTheorem} />
       {chapters.map((chapter) => {
         const doneHere = chapter.exercises.filter((x) => done.has(x.id)).length;
         const isOpen = openChapter === chapter.id;
